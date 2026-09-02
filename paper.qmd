@@ -33,3 +33,20 @@ data <- read.csv("data/penguins.csv")
 mean(data$bill_len)
 
 ```
+
+```{r}
+x <- data$bill_len
+
+```
+
+```{r}
+hist(x, breaks = seq(30, 60,3))
+```
+
+```{r}
+hist(x, breaks = seq(30, 60, 2))
+```
+
+```{r}
+hist(x, breaks = seq(30, 60, 1))
+```
