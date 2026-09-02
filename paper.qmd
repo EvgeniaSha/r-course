@@ -14,9 +14,6 @@ data <- read.csv("data/penguins.csv")
 mean(data$bill_len)
 ```
 
-```{r}
-library(tidyverse)
-```
 
 ---
 title: "Длина клюва пингвинов"
@@ -49,4 +46,12 @@ hist(x, breaks = seq(30, 60, 2))
 
 ```{r}
 hist(x, breaks = seq(30, 60, 1))
+```
+
+```{r}
+data <- read.csv("data/penguins.csv")
+
+x <- data$bill_len
+
+hist(x, breaks = seq(30, 60, 2))
 ```
