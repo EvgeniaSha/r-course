@@ -1,0 +1,35 @@
+---
+title: "Длина клюва пингвинов"
+format:
+  html :
+    embed-resources: true
+---
+
+```{r}
+data <- read.csv("data/penguins.csv")
+
+```
+
+```{r}
+mean(data$bill_len)
+```
+
+```{r}
+library(tidyverse)
+```
+
+---
+title: "Длина клюва пингвинов"
+format:
+  html:
+    embed-resources: true
+---
+
+```{r}
+data <- read.csv("data/penguins.csv")
+```
+
+```{r}
+mean(data$bill_len)
+
+```
