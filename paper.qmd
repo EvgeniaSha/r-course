@@ -68,6 +68,7 @@ title: "Ящик с усами для длины клюва. "
 format:
   html :
     embed-resources: true
+    
 ---
 
 ```{r}
