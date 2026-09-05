@@ -63,6 +63,12 @@ x <- data$bill_len
 
 boxplot(x)
 ```
+---
+title: "Ящик с усами для длины клюва. "
+format:
+  html :
+    embed-resources: true
+---
 
 ```{r}
 data <- read.csv("data/penguins.csv")
