@@ -1,0 +1,235 @@
+---
+title: "Визуальная оценка взаимосвязи между числом НЯ и собранными признаками пациентов"
+format:
+  html:
+    embed-resources: true
+---
+
+
+# Подготовка
+
+```{r setup}
+#| message: false
+
+library(tidyverse)
+library(patchwork)
+library(gghighlight)
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+crohn <- read_csv("data/CrohnD.csv", show_col_types = FALSE)
+```
+
+```{r}
+crohn$sex <- factor(crohn$sex, levels = c("F", "M"))
+crohn$country <- factor(crohn$country, levels = c("c1", "c2"))
+crohn$treat <- factor(crohn$treat, levels = c("placebo", "d1", "d2"))
+```
+
+```{r}
+dim(crohn)
+```
+
+```{r}
+colSums(is.na(crohn))
+```
+
+В файле 117 пациентов. Число НЯ изменяется от 0 до 12. Пропусков в используемых столбцах нет. Поэтому важно показать отдельные наблюдения, а не только средние значения. Для числовых признаков выбрала диаграммы рассеяния, для категориальных — боксплоты с точками пациентов. Это позволяет увидеть возможные тенденции, разброс, перекрытие распределений и крайние наблюдения.
+
+```{r}
+theme_set(theme_minimal(base_size = 12))
+```
+Обозначения групп: F — женщины, M — мужчины; placebo — плацебо, d1 — препарат 1, d2 — препарат 2. Страны оставляем под кодами c1 и c2: их названия не указаны.
+
+На всех четырёх графиках по вертикали отложено число НЯ, по горизонтали — соответствующий признак. Одна точка — один пациент.
+
+1. Зависимость от числовых признаков.
+
+Числовые признаки(возраст, BMI, рост, вес)
+```{r}
+p_age <- ggplot(crohn, aes(x = age, y = nrAdvE)) +
+  geom_point(
+    position = position_jitter(width = 0, height = 0.1, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  geom_smooth(method = "loess", span = 1, se = FALSE, colour = "darkorange3") +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Возраст, лет", y = "Число НЯ")
+
+p_age
+```
+
+Отмечается слабая восходящая тенденция, но значения сильно разбросаны. При разных возрастах встречаются пациенты без НЯ; чёткой зависимости по графику не видно.
+
+
+
+```{r}
+p_bmi <- ggplot(crohn, aes(x = BMI, y = nrAdvE)) +
+  geom_point(
+    position = position_jitter(width = 0, height = 0.1, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  geom_smooth(method = "loess", span = 1, se = FALSE, colour = "darkorange3") +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "ИМТ, кг/м²", y = "Число НЯ")
+
+p_bmi
+```
+Линия сглаживания указывает на возможное увеличение числа НЯ с ростом ИМТ. Однако разброс велик, а при высоком ИМТ пациентов мало, поэтому тенденцию следует оценивать осторожно.
+
+
+
+
+```{r}
+p_height <- ggplot(crohn, aes(x = height, y = nrAdvE)) +
+  geom_point(
+    position = position_jitter(width = 0, height = 0.1, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  geom_smooth(method = "loess", span = 1, se = FALSE, colour = "darkorange3") +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Рост, см", y = "Число НЯ")
+
+p_height
+```
+Сглаженная линия снижается, но на её левую часть влияет отдельный пациент с ростом 124 см и 9 НЯ (ID = 28911). Значение роста желательно проверить по первоисточнику. Без такой проверки запись не изменяем и не исключаем.
+
+
+```{r}
+p_weight <- ggplot(crohn, aes(x = weight, y = nrAdvE)) +
+  geom_point(
+    position = position_jitter(width = 0, height = 0.1, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  geom_smooth(method = "loess", span = 1, se = FALSE, colour = "darkorange3") +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Масса тела, кг", y = "Число НЯ")
+
+p_weight
+```
+
+Выраженной монотонной связи числа НЯ с массой тела не видно. При разных значениях массы встречаются как нулевые, так и более высокие числа НЯ.
+
+
+2. Зависимость от категориальных признаков.
+Категориальные признаки(пол, страна, лечение)
+
+
+```{r}
+table(crohn$sex)
+```
+В датафрейме 100 женщин и 17 мужчин.
+
+```{r}
+p_sex <- ggplot(crohn, aes(x = sex, y = nrAdvE)) +
+  geom_boxplot(fill = "lightblue", outlier.shape = NA) +
+  geom_point(
+    position = position_jitter(width = 0.15, height = 0, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3,
+    colour = "firebrick"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Пол", y = "Число НЯ")
+
+p_sex
+```
+В группе мужчин среднее выше, но медиана в обеих группах равна 1. Мужчин в выборке значительно меньше, поэтому сравнение чувствительно к отдельным высоким значениям.
+
+
+
+```{r}
+table(crohn$country)
+```
+
+```{r}
+p_country <- ggplot(crohn, aes(x = country, y = nrAdvE)) +
+  geom_boxplot(fill = "lightblue", outlier.shape = NA) +
+  geom_point(
+    position = position_jitter(width = 0.15, height = 0, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3,
+    colour = "firebrick"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Страна", y = "Число НЯ")
+
+p_country
+```
+У пациентов из c2 среднее выше и верхняя часть распределения шире, чем в c1. Медианы обеих групп равны 1, распределения существенно перекрываются.
+
+
+
+```{r}
+table(crohn$treat)
+```
+
+```{r}
+p_treat <- ggplot(crohn, aes(x = treat, y = nrAdvE)) +
+  geom_boxplot(fill = "lightblue", outlier.shape = NA) +
+  geom_point(
+    position = position_jitter(width = 0.15, height = 0, seed = 123),
+    alpha = 0.6,
+    colour = "steelblue"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3,
+    colour = "firebrick"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(crohn$nrAdvE), by = 2)) +
+  labs(x = "Группа лечения", y = "Число НЯ")
+
+p_treat
+```
+В d1 медиана равна 0, а в placebo и d2 — 1. Среднее в d1 также ниже; d2 занимает промежуточное положение по среднему. При этом распределения всех трёх групп перекрываются. По рисунку нельзя утверждать, что препарат уменьшает число НЯ: необходима количественная оценка различий и их неопределённости. 
+
+```{r}
+dir.create("out/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave("out/figures/age.png", p_age, width = 8, height = 4.5, dpi = 150)
+```
+
+```{r}
+ggsave("out/figures/bmi.png", p_bmi, width = 8, height = 4.5, dpi = 150)
+```
+
+
+```{r}
+ggsave("out/figures/height.png", p_height, width = 8, height = 4.5, dpi = 150)
+```
+
+
+```{r}
+ggsave("out/figures/weight.png", p_weight, width = 8, height = 4.5, dpi = 150)
+```
+
+
+```{r}
+ggsave("out/figures/sex.png", p_sex, width = 8, height = 4.5, dpi = 150)
+ggsave("out/figures/country.png", p_country, width = 8, height = 4.5, dpi = 150)
+ggsave("out/figures/treatment.png", p_treat, width = 8, height = 4.5, dpi = 150)
+
+writeLines(capture.output(sessionInfo()), "out/session-info.txt")
+```
+
